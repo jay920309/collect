@@ -190,7 +190,7 @@ function App() {
       if (errMsg.toLowerCase().includes('quota') || errMsg.includes('429')) {
          const isUsingCustomKey = !!localStorage.getItem('GEMINI_CUSTOM_API_KEY');
          if (isUsingCustomKey) {
-            alert('辨識失敗：您的「專屬 API Key」今日免費配額已達上限。\n\nGemini 免費版每日約有 1500 次辨識額度，請稍後再試，或檢查您的金鑰是否有效。');
+            alert('辨識失敗：您的「專屬 API Key」配額異常。\n\n1. 每日配額：免費版每天 1500 次。\n2. 每分鐘限制：每分鐘最多 15 次。\n\n如果您剛換新金鑰就看到這則訊息，可能是按太快了（每分鐘限制），請等 1 分鐘後再試一次。');
          } else {
             alert('辨識次數已達公共免費額度上限，請稍後再試。\n\n強烈建議您點擊右上角的「設定」圖示，並填入您申請的免費 API Key，即可擁有專屬的辨識額度！');
          }
