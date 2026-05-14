@@ -36,11 +36,14 @@ function App() {
 
   useEffect(() => {
     // Check key status on mount and when customApiKey changes
-    const hasSystemKey = !!import.meta.env.VITE_GEMINI_API_KEY;
-    const hasCustomKey = !!localStorage.getItem('GEMINI_CUSTOM_API_KEY');
+    const systemKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+    const customKey = localStorage.getItem('GEMINI_CUSTOM_API_KEY');
+    const hasCustomKey = !!(customKey && customKey.trim().length > 10);
+    const hasSystemKey = !!(systemKey && systemKey.trim().length > 10);
     
-    if (hasSystemKey) setApiKeyStatus('system');
-    else if (hasCustomKey) setApiKeyStatus('custom');
+    // 優先顯示自定義金鑰狀態
+    if (hasCustomKey) setApiKeyStatus('custom');
+    else if (hasSystemKey) setApiKeyStatus('system');
     else setApiKeyStatus('missing');
   }, [isSettingsOpen]);
 
@@ -163,7 +166,7 @@ function App() {
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || isScanning) return;
 
     setActiveTab('scan');
     setIsScanning(true);
@@ -188,9 +191,11 @@ function App() {
       console.error(error);
       const errMsg = error?.message || String(error);
       if (errMsg.toLowerCase().includes('quota') || errMsg.includes('429')) {
-         const isUsingCustomKey = !!localStorage.getItem('GEMINI_CUSTOM_API_KEY');
+         const customKey = localStorage.getItem('GEMINI_CUSTOM_API_KEY');
+         const isUsingCustomKey = !!(customKey && customKey.trim().length > 10);
+         
          if (isUsingCustomKey) {
-            alert('辨識失敗：您的「專屬 API Key」配額異常。\n\n1. 每日配額：免費版每天 1500 次。\n2. 每分鐘限制：每分鐘最多 15 次。\n\n如果您剛換新金鑰就看到這則訊息，可能是按太快了（每分鐘限制），請等 1 分鐘後再試一次。');
+            alert('辨識失敗：您的「專屬 API Key」配額異常。\n\n1. 每日配額：免費版每天 1500 次。\n2. 每分鐘限制：每分鐘最多 15 次。\n\n如果您剛換新金鑰就看到這則訊息，請檢查：\n- 是否在多台裝置同時使用同一個金鑰？\n- 是否剛才按得太快了？請等 1 分鐘後再試。');
          } else {
             alert('辨識次數已達公共免費額度上限，請稍後再試。\n\n強烈建議您點擊右上角的「設定」圖示，並填入您申請的免費 API Key，即可擁有專屬的辨識額度！');
          }
@@ -818,11 +823,19 @@ function App() {
                   <div className="flex items-center gap-2 mb-2">
                     <div className={`w-2 h-2 rounded-full ${apiKeyStatus === 'missing' ? 'bg-red-500' : 'bg-green-500'}`}></div>
                     <span className="text-[11px] font-bold text-[#5A5A40]">
-                      目前的連線狀態：{apiKeyStatus === 'system' ? 'AI Studio Cloud (已連接)' : apiKeyStatus === 'custom' ? '使用者金鑰 (已連接)' : '尚未輸入金鑰'}
+                      目前的連線狀態：{apiKeyStatus === 'system' ? '公共額度 (AI Studio)' : apiKeyStatus === 'custom' ? '使用者專屬金鑰' : '尚未輸入金鑰'}
                     </span>
                   </div>
+                  {apiKeyStatus === 'custom' && (
+                    <p className="text-[10px] text-[#5A5A40] font-mono mb-2 bg-white/50 px-2 py-1 rounded">
+                      正在選用：{(() => {
+                        const k = localStorage.getItem('GEMINI_CUSTOM_API_KEY') || '';
+                        return k.length > 8 ? `${k.substring(0, 4)}...${k.substring(k.length - 4)}` : '金鑰格式不全';
+                      })()}
+                    </p>
+                  )}
                   <p className="text-[10px] text-[#8A8A75] leading-relaxed">
-                    在 GitHub Pages 模式下，辨識功能需要您輸入個人的 API Key。此金鑰僅會儲存在這台裝置的瀏覽器中，安全合法。
+                    在 GitHub Pages 模式下，辨識功能需要您輸入個人的 API Key。此金鑰僅會儲存在這台裝置的瀏覽器中。
                   </p>
                 </div>
 
