@@ -125,3 +125,4 @@ ${collectionJson}
     confidence: result.confidence
   };
 };
+
