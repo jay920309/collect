@@ -1,5 +1,5 @@
 {
-  "name": "Remix: 紀念品收藏管家",
+  "name": "紀念品收藏管家",
   "description": "這是一款利用 AI 影像辨識與比對的私人紀念品收藏管理助手，可以掃描物品、提取特徵、防止重複購買。",
   "requestFramePermissions": [
     "camera"
