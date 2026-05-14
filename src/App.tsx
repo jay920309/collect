@@ -23,7 +23,7 @@ function App() {
   const [isConfirmingDeleteItem, setIsConfirmingDeleteItem] = useState(false);
 
   // Category selection and editing
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [selectedCategory, setSelectedCategory] = useState<string>('全部');
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingCategoryName, setEditingCategoryName] = useState('');
   const [isConfirmingDeleteCategory, setIsConfirmingDeleteCategory] = useState(false);
@@ -100,7 +100,7 @@ function App() {
   };
 
   const handleRenameCategory = async () => {
-    if (!selectedCategory || selectedCategory === 'All') return;
+    if (!selectedCategory || selectedCategory === '全部') return;
     if (!editingCategoryName.trim()) return;
     
     const newItems = souvenirs.map(s => {
@@ -117,7 +117,7 @@ function App() {
   };
 
   const handleDeleteCategory = async () => {
-    if (!selectedCategory || selectedCategory === 'All') return;
+    if (!selectedCategory || selectedCategory === '全部') return;
     const newItems = souvenirs.filter(s => s.category !== selectedCategory);
     await setAllSouvenirs(newItems);
     await loadSouvenirs();
@@ -188,7 +188,12 @@ function App() {
       console.error(error);
       const errMsg = error?.message || String(error);
       if (errMsg.toLowerCase().includes('quota') || errMsg.includes('429')) {
-         alert('AI 辨識次數已達免費額度上限，請稍後再試。或是請您的家人(分享者)設定專屬的 API Key 即可永久解決此問題。');
+         const isUsingCustomKey = !!localStorage.getItem('GEMINI_CUSTOM_API_KEY');
+         if (isUsingCustomKey) {
+            alert('辨識失敗：您的「專屬 API Key」今日免費配額已達上限。\n\nGemini 免費版每日約有 1500 次辨識額度，請稍後再試，或檢查您的金鑰是否有效。');
+         } else {
+            alert('辨識次數已達公共免費額度上限，請稍後再試。\n\n強烈建議您點擊右上角的「設定」圖示，並填入您申請的免費 API Key，即可擁有專屬的辨識額度！');
+         }
       } else if (errMsg.includes('API_KEY_MISSING')) {
          alert('無法分析照片，因為缺少 Gemini API Key。\n\n如果您是從 GitHub Pages 使用，請點擊右上角的「設定」圖示並輸入您的 Gemini API Key。\n\n如果您是在 AI Studio 使用，建議回到 Google AI Studio 介面，按右上角的「Share」產生連結。透過 Share 連結分享，家人不需要設定 API Key 即可使用！');
       } else {
@@ -227,7 +232,7 @@ function App() {
   };
 
   const categories = Array.from(new Set(souvenirs.map(s => s.category)));
-  const visibleCategories = selectedCategory === 'All' ? categories : [selectedCategory];
+  const visibleCategories = selectedCategory === '全部' ? categories : [selectedCategory];
   const searchLower = searchQuery.toLowerCase();
 
   return (
@@ -289,7 +294,7 @@ function App() {
                 onChange={(e) => setSelectedCategory(e.target.value)}
                 className="bg-transparent font-serif font-bold text-[#3A3A2F] text-lg focus:outline-none appearance-none pr-6 cursor-pointer"
               >
-                <option value="All">所有收藏 ({souvenirs.length})</option>
+                <option value="全部">所有收藏 ({souvenirs.length})</option>
                 {categories.map(c => (
                   <option key={c} value={c}>{c} ({souvenirs.filter(s => s.category === c).length})</option>
                 ))}
@@ -298,7 +303,7 @@ function App() {
             </div>
 
             <div className="flex items-center gap-4">
-              {selectedCategory !== 'All' && selectedCategory && (
+              {selectedCategory !== '全部' && selectedCategory && (
                 <button 
                   onClick={() => {
                     setEditingCategoryName(selectedCategory);
@@ -433,7 +438,7 @@ function App() {
                   </div>
                   <div className="p-6 space-y-5">
                     <div>
-                      <label className="block text-[10px] font-semibold text-[#8A8A75] mb-2 uppercase tracking-tight">Name 名稱</label>
+                      <label className="block text-[10px] font-semibold text-[#8A8A75] mb-2 uppercase tracking-tight">名稱</label>
                       <input 
                         type="text" 
                         value={editName}
@@ -442,7 +447,7 @@ function App() {
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-semibold text-[#8A8A75] mb-2 uppercase tracking-tight">Category 分類</label>
+                      <label className="block text-[10px] font-semibold text-[#8A8A75] mb-2 uppercase tracking-tight">分類</label>
                       <input 
                         type="text" 
                         value={editCategory}
@@ -451,7 +456,7 @@ function App() {
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-semibold text-[#8A8A75] mb-2 uppercase tracking-tight">Features 特徵</label>
+                      <label className="block text-[10px] font-semibold text-[#8A8A75] mb-2 uppercase tracking-tight">特徵</label>
                       <textarea 
                         value={editFeatures}
                         onChange={(e) => setEditFeatures(e.target.value)}
@@ -461,7 +466,7 @@ function App() {
                       <p className="serif text-center italic text-[#5A5A40] mt-3 text-sm">「以上特徵辨識正確嗎？如有錯誤請直接修改。」</p>
                     </div>
                     <div>
-                      <label className="block text-[10px] font-semibold text-[#8A8A75] mb-2 uppercase tracking-tight">Notes 個人備註 (選填)</label>
+                      <label className="block text-[10px] font-semibold text-[#8A8A75] mb-2 uppercase tracking-tight">個人備註 (選填)</label>
                       <input 
                         type="text" 
                         value={editUserNote}
@@ -535,12 +540,12 @@ function App() {
 
                   return (
                     <div key={category} className="space-y-5 mb-8">
-                      {selectedCategory === 'All' && (
+                      {selectedCategory === '全部' && (
                         <h2 className="text-xl font-serif font-semibold text-[#3A3A2F] flex items-center gap-3 border-b border-[rgba(90,90,64,0.1)] pb-3">
                           <span className="w-2 h-2 bg-[#5A5A40] rounded-full inline-block"></span>
                           {category}
                           <span className="text-[10px] bg-[#E8E8E0] text-[#5A5A40] px-2 py-0.5 rounded shadow-sm font-mono tracking-widest ml-1">
-                            {items.length} ITEMS
+                            {items.length} 項目
                           </span>
                         </h2>
                       )}
@@ -617,7 +622,7 @@ function App() {
 
               <div className="p-6 overflow-y-auto space-y-5">
                 <div>
-                  <label className="block text-[10px] font-semibold text-[#8A8A75] mb-2 uppercase tracking-tight">Name 名稱</label>
+                  <label className="block text-[10px] font-semibold text-[#8A8A75] mb-2 uppercase tracking-tight">名稱</label>
                   <input 
                     type="text" 
                     value={editingItem.name}
@@ -626,7 +631,7 @@ function App() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-semibold text-[#8A8A75] mb-2 uppercase tracking-tight">Category 分類</label>
+                  <label className="block text-[10px] font-semibold text-[#8A8A75] mb-2 uppercase tracking-tight">分類</label>
                   <input 
                     type="text" 
                     value={editingItem.category}
@@ -635,7 +640,7 @@ function App() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-semibold text-[#8A8A75] mb-2 uppercase tracking-tight">Features 特徵</label>
+                  <label className="block text-[10px] font-semibold text-[#8A8A75] mb-2 uppercase tracking-tight">特徵</label>
                   <textarea 
                     value={editingItem.features}
                     onChange={(e) => setEditingItem({ ...editingItem, features: e.target.value })}
@@ -644,7 +649,7 @@ function App() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-semibold text-[#8A8A75] mb-2 uppercase tracking-tight">Notes 個人備註 (選填)</label>
+                  <label className="block text-[10px] font-semibold text-[#8A8A75] mb-2 uppercase tracking-tight">個人備註 (選填)</label>
                   <input 
                     type="text" 
                     value={editingItem.userNote || ''}
