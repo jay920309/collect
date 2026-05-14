@@ -31,17 +31,21 @@ function App() {
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [customApiKey, setCustomApiKey] = useState(localStorage.getItem('GEMINI_CUSTOM_API_KEY') || '');
+  const [customApiKey, setCustomApiKey] = useState('');
   const [apiKeyStatus, setApiKeyStatus] = useState<'missing' | 'custom' | 'system'>('missing');
 
   useEffect(() => {
-    // Check key status on mount and when customApiKey changes
+    // Check key status and sync state when opening settings
     const systemKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
-    const customKey = localStorage.getItem('GEMINI_CUSTOM_API_KEY');
-    const hasCustomKey = !!(customKey && customKey.trim().length > 10);
+    const storedKey = localStorage.getItem('GEMINI_CUSTOM_API_KEY') || '';
+    
+    if (isSettingsOpen) {
+      setCustomApiKey(storedKey);
+    }
+    
+    const hasCustomKey = !!(storedKey && storedKey.trim().length > 10);
     const hasSystemKey = !!(systemKey && systemKey.trim().length > 10);
     
-    // 優先顯示自定義金鑰狀態
     if (hasCustomKey) setApiKeyStatus('custom');
     else if (hasSystemKey) setApiKeyStatus('system');
     else setApiKeyStatus('missing');
@@ -857,18 +861,29 @@ function App() {
                     if (customApiKey.trim()) {
                       localStorage.setItem('GEMINI_CUSTOM_API_KEY', customApiKey.trim());
                       setIsSettingsOpen(false);
-                      // Force a quick refresh of the status
                       setApiKeyStatus('custom');
-                    } else {
-                      localStorage.removeItem('GEMINI_CUSTOM_API_KEY');
-                      setIsSettingsOpen(false);
-                      setApiKeyStatus('missing');
                     }
                   }}
-                  className="w-full bg-[#5A5A40] text-white px-4 py-3 rounded-full text-sm font-semibold hover:bg-[#3A3A2F] transition-colors shadow-sm"
+                  disabled={!customApiKey.trim()}
+                  className="w-full bg-[#5A5A40] text-white px-4 py-3 rounded-full text-sm font-semibold hover:bg-[#3A3A2F] transition-colors shadow-sm disabled:opacity-50"
                 >
-                  儲存設定
+                  儲存並更新金鑰
                 </button>
+                
+                {localStorage.getItem('GEMINI_CUSTOM_API_KEY') && (
+                  <button 
+                    onClick={() => {
+                      localStorage.removeItem('GEMINI_CUSTOM_API_KEY');
+                      setCustomApiKey('');
+                      setApiKeyStatus('missing');
+                      setIsSettingsOpen(false);
+                    }}
+                    className="w-full bg-[#FFF4E5] text-[#D9480F] border border-[#FFD8A8] px-4 py-3 rounded-full text-sm font-semibold hover:bg-[#FFE8CC] transition-colors"
+                  >
+                    清除並刪除儲存的金鑰
+                  </button>
+                )}
+
                 <button 
                   onClick={() => setIsSettingsOpen(false)}
                   className="w-full bg-white text-[#8A8A75] px-4 py-3 rounded-full text-sm font-semibold hover:bg-[#F5F5F0] transition-colors"
