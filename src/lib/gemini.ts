@@ -15,12 +15,7 @@ export const analyzeSouvenir = async (
   mimeType: string,
   currentCollection: Souvenir[]
 ): Promise<AnalysisResult> => {
-  const customKey = localStorage.getItem('GEMINI_CUSTOM_API_KEY');
-  const systemKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
-  
-  // 優先使用使用者手動輸入的金鑰，並確保過濾掉無效字串
-  const apiKey = (customKey && customKey.trim().length > 10) ? customKey.trim() : systemKey;
-  
+  let apiKey = localStorage.getItem('GEMINI_CUSTOM_API_KEY') || import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
   if (!apiKey || apiKey === 'undefined' || apiKey === '') {
     throw new Error('API_KEY_MISSING');
   }
@@ -37,9 +32,6 @@ export const analyzeSouvenir = async (
   const prompt = `
 你是一位專業的「私人收藏辨識與管理助手」。你的核心任務是透過使用者上傳的實體照片，精準比對現有收藏資料庫，防止重複購買，並自動提取藏品特徵進行數位化存檔。
 
-【重要語言指令】
-你必須完全使用「繁體中文（台灣慣用語）」來填寫所有文字欄位（name, category, features）。即使照片中出現其他語言，也請翻譯成繁體中文。
-
 【任務 1：特徵提取】
 仔細觀察上傳的圖片，提取該物品的視覺特徵（外型、顏色、文字、圖案）。
 
@@ -52,11 +44,11 @@ ${collectionJson}
 
 【任務 3：產出屬性】
 如果判定為新藏品，請根據圖片建議：
-- category (如：戰鬥陀螺、紀念幣、模型汽車、風景區限定等)
+- category (如：香火袋、紀念幣、多美卡小車、風景區限定等)
 - name (藏品名稱，盡量簡明扼要)
-- features (詳細描述該物品，例如：「[紀念幣] 金色、直徑約 3cm、正面為阿里山小火車、背面有 2024 字樣」)
+- features (例如：「[紀念幣] 金色、直徑約 3cm、正面為阿里山小火車、背面有 2024 字樣」)
 
-如果是已收藏，也請填寫上述名稱與特徵，並確保使用繁體中文。
+如果是已收藏，也請填寫上述名稱與特徵，作為參考。
 請嚴格以 JSON 格式回傳結果。
 `;
 
@@ -94,15 +86,15 @@ ${collectionJson}
           },
           name: {
             type: Type.STRING,
-            description: "藏品名稱 (請使用繁體中文)"
+            description: "藏品名稱"
           },
           category: {
             type: Type.STRING,
-            description: "收藏庫名稱/分類 (請使用繁體中文)"
+            description: "收藏庫名稱/分類"
           },
           features: {
             type: Type.STRING,
-            description: "特徵描述 (請使用繁體中文)"
+            description: "特徵描述"
           }
         },
         required: ["isDuplicate", "confidence", "name", "category", "features"]
@@ -125,4 +117,3 @@ ${collectionJson}
     confidence: result.confidence
   };
 };
-
