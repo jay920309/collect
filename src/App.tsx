@@ -188,11 +188,15 @@ function App() {
       console.error('Gemini Analysis Error:', error);
       const errMsg = error?.message || String(error);
       if (errMsg.toLowerCase().includes('quota') || errMsg.includes('429')) {
-         alert('AI 辨識次數已達免費額度上限，請稍後再試。或是請您的家人(分享者)設定專屬的 API Key 即可永久解決此問題。\n\n詳細錯誤訊息：' + errMsg);
+         if (errMsg.includes('自訂金鑰')) {
+             alert(`您綁定的自訂 API Key 已經達到呼叫次數上限 (HTTP 429)。\n因為免費版 API Key 有限制每分鐘 15 次或每天上限，請稍後幾分鐘再試。\n\n詳細錯誤訊息：${errMsg}`);
+         } else {
+             alert(`目前使用的「系統共用」免費額度已被耗盡，出現額度上限提示（不是因為您連點造成的）。\n👉 請點擊右上角「設定」圖示，輸入您自己專屬的 Gemini API Key，即可永久解決此問題！\n\n詳細錯誤訊息：${errMsg}`);
+         }
       } else if (errMsg.includes('API_KEY_MISSING')) {
-         alert('無法分析照片，因為缺少 Gemini API Key。\n\n如果您是從 GitHub Pages 使用，請點擊右上角的「設定」圖示並輸入您的 Gemini API Key。\n\n如果您是在 AI Studio 使用，建議回到 Google AI Studio 介面，按右上角的「Share」產生連結。透過 Share 連結分享，家人不需要設定 API Key 即可使用！');
+         alert('無法分析照片，因為缺少 Gemini API Key。\n\n請點擊右上角的「設定」圖示並輸入您的 Gemini API Key。\n\n如果您是在 AI Studio 使用，建議回到 Google AI Studio 介面，按右上角的「Share」產生連結。透過 Share 連結分享，家人不需要設定 API Key 即可使用！');
       } else {
-         alert('分析失敗，請重試。\n\n錯誤細節：' + errMsg);
+         alert(`分析失敗，請重試。\n\n錯誤細節：${errMsg}`);
       }
     } finally {
       setIsScanning(false);
@@ -886,7 +890,3 @@ function App() {
         </button>
       </div>
     </div>
-  );
-}
-
-export default App;
