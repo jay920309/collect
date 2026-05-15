@@ -19,6 +19,9 @@ export const analyzeSouvenir = async (
   if (!apiKey || apiKey === 'undefined' || apiKey === '') {
     throw new Error('API_KEY_MISSING');
   }
+  
+  const isCustomKey = !!localStorage.getItem('GEMINI_CUSTOM_API_KEY');
+  const keyHint = isCustomKey ? `自訂金鑰(...${apiKey.slice(-4)})` : `系統共用金鑰`;
 
   const ai = new GoogleGenAI({ apiKey });
 
@@ -100,6 +103,8 @@ ${collectionJson}
         required: ["isDuplicate", "confidence", "name", "category", "features"]
       }
     },
+  }).catch((err) => {
+    throw new Error(`[${keyHint}] ${err.message}`);
   });
 
   const text = response.text;
